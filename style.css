@@ -1,0 +1,207 @@
+/* ******* general ******* */
+:root {
+  --boardWidth: 500px;
+  --black_color: #555d;
+  --white_color: #eeed;
+}
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url(./media/wood.jpg);
+  background-size: cover;
+}
+.container {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto auto auto;
+}
+/* ******* ------- ******* */
+/* ******* control board ******* */
+.control_board {
+  grid-column: 1/4;
+  padding: 10px;
+  box-sizing: border-box;
+  background-color: #d88d0eaa;
+  color: white;
+  display: flex;
+  gap: 20px;
+}
+/* test mode */
+.control_board label {
+  display: inline-flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.control_board label input {
+  display: none;
+}
+.control_board label span {
+  display: inline-block;
+  height: 15px;
+  width: 25px;
+  border-radius: 15px;
+  margin-right: 5px;
+  padding: 1px;
+  background-color: white;
+  position: relative;
+}
+.control_board label span::after {
+  content: "";
+  height: 15px;
+  width: 15px;
+  border-radius: 15px;
+  position: absolute;
+  top: 1px;
+  transform: translateX(0);
+  left: 1px;
+  background-color: #aaa;
+  transition-duration: 0.15s;
+}
+.control_board label input:checked + span::after {
+  transform: translateX(10px);
+  background-color: #d88d0e;
+}
+button {
+  outline: none;
+  border: solid white 1px;
+  background-color: #d88d0e;
+  color: white;
+  padding: 2px 10px;
+}
+/* ******* ------------- ******* */
+
+/* ******* chess board ******* */
+.chess_board {
+  display: grid;
+  height: var(--boardWidth);
+  width: var(--boardWidth);
+  grid-template: repeat(8, auto) / repeat(8, auto);
+  position: relative;
+  transform: rotate(0deg) scale(1);
+}
+.rotatingBoard.roundB,
+.rotatingBoard.roundW {
+  animation-name: roundAnimation;
+  animation-duration: 1s;
+  animation-iteration-count: 1;
+  animation-timing-function: linear;
+  animation-delay: 0.5s;
+  animation-fill-mode: both;
+}
+.rotatingBoard.roundB {
+  animation-direction: normal;
+}
+.rotatingBoard.roundW {
+  animation-direction: reverse;
+}
+@keyframes roundAnimation {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(90deg) scale(0.5);
+  }
+  100% {
+    transform: rotate(180deg) scale(1);
+  }
+}
+
+/* boxes */
+.chess_board .box {
+  position: relative;
+  transition-duration: 0.3s;
+}
+.chess_board .box.d {
+  background-color: var(--black_color);
+}
+.chess_board .box.l {
+  background-color: var(--white_color);
+}
+.chess_board .box::after {
+  content: "";
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  height: calc(100% - 2px);
+  width: calc(100% - 2px);
+}
+.chess_board .box.available::after {
+  background-color: #0030ef77;
+}
+.chess_board .box.danger::after {
+  background-color: #e6051077;
+}
+.graveyard.available::before,
+.chess_board .box.danger::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 7;
+}
+.chess_board .box .hSeq,
+.chess_board .box .vSeq {
+  position: absolute;
+  color: #000;
+  font-size: 9px;
+  height: 11px;
+  width: 11px;
+  border-radius: 50%;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.chess_board .box .hSeq {
+  bottom: 2px;
+  right: 2px;
+}
+.chess_board .box .vSeq {
+  left: 2px;
+  top: 2px;
+}
+/* Pieces */
+.chess_board .chess_Piece {
+  width: calc(var(--boardWidth) / 8 - 8px);
+  height: calc(var(--boardWidth) / 8 - 8px);
+  padding: 4px;
+  position: absolute;
+  transition-duration: 0.3s;
+  z-index: 5;
+  transform: rotate(0);
+}
+.rotatingBoard .chess_Piece[alt^="b"] {
+  transform: rotate(180deg);
+}
+.graveyard .chess_Piece {
+  width: calc(var(--boardWidth) / 16 - 4px);
+  height: calc(var(--boardWidth) / 16 - 4px);
+  padding: 2px;
+}
+/* ******* ----------- ******* */
+
+/* ******* graveyard ******* */
+.graveyard {
+  height: var(--boardWidth);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  width: calc(var(--boardWidth) / 16);
+  position: relative;
+}
+.graveyard.b {
+  background-color: var(--black_color);
+}
+.graveyard.w {
+  background-color: var(--white_color);
+}
+.graveyard.available {
+  background-color: #0030efc4;
+}
+/* ******* --------------- ******* */
