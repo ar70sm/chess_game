@@ -131,7 +131,8 @@ button {
 .chess_board .box.available::after {
   background-color: #0030ef77;
 }
-.chess_board .box.danger::after {
+.chess_board .box.danger::after ,
+.chess_board .box.ksh::after {
   background-color: #e6051077;
 }
 .graveyard.available::before,
