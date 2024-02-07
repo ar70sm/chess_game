@@ -131,7 +131,7 @@ button {
 .chess_board .box.available::after {
   background-color: #0030ef77;
 }
-.chess_board .box.danger::after ,
+.chess_board .box.danger::after,
 .chess_board .box.ksh::after {
   background-color: #e6051077;
 }
@@ -167,7 +167,7 @@ button {
   top: 2px;
 }
 /* Pieces */
-.chess_board .chess_Piece {
+.chess_board .chess_piece {
   width: calc(var(--boardWidth) / 8 - 8px);
   height: calc(var(--boardWidth) / 8 - 8px);
   padding: 4px;
@@ -176,15 +176,48 @@ button {
   z-index: 5;
   transform: rotate(0);
 }
-.rotatingBoard .chess_Piece[alt^="b"] {
+.rotatingBoard .chess_piece[alt^="b"] {
   transform: rotate(180deg);
 }
-.graveyard .chess_Piece {
+.graveyard .chess_piece {
   width: calc(var(--boardWidth) / 16 - 4px);
   height: calc(var(--boardWidth) / 16 - 4px);
   padding: 2px;
 }
 /* ******* ----------- ******* */
+/* ******* pawn_promotion ******* */
+.pawn_promotion {
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  top: 0;
+  left: 0;
+  background-color: #0007;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+  opacity: 0;
+  transition-duration: 0.3s;
+}
+.pawn_promotion.visible {
+  visibility: visible;
+  opacity: 1;
+}
+.pawn_promotion .counter {
+  padding: 50px 100px;
+  background-color: white;
+}
+.pawn_promotion {
+  padding: 10px;
+}
+.pawn_promotion.b .chess_piece[alt^="w"] {
+  display: none;
+}
+.pawn_promotion.w .chess_piece[alt^="b"] {
+  display: none;
+}
+/* ******* -------------- ******* */
 
 /* ******* graveyard ******* */
 .graveyard {
@@ -206,3 +239,32 @@ button {
   background-color: #0030efc4;
 }
 /* ******* --------------- ******* */
+
+/* ******* history ******* */
+.history {
+  grid-column: 1/4;
+  display: flex;
+  gap: 5px;
+  max-width: 100%;
+}
+.history div {
+  flex-grow: 1;
+  width: 0;
+}
+.history p {
+  margin: 0;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: end;
+}
+.history > * {
+  height: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+  background-color: #d88d0eaa;
+  color: white;
+  margin: 0;
+  border: none;
+}
+/* ******* ------- ******* */

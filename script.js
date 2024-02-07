@@ -1,16 +1,19 @@
-// rook knight bishop king queen pawn
-
-// ********************* control variables *********************
+// ********************* variables *********************
+let currentPiece = null;
+let round = true;
+let location_arr = [];
+let primaryLocation = [];
+let historyList = [];
+let index = 0;
+// let piecesList = [
+//   {id:"wrr",team:"w",type:"r",home:{x:0,y:0},location:{x:0,y:0}}
+// ];
+// ** *** control variables *** **\\
 let controls = {
   testMode: false,
   movingSound: false,
   rotatingBoard: false,
 };
-let currentPiece = null;
-let round = true;
-
-// ********************* variables *********************
-let location_arr = [];
 
 // ********************* main events *********************
 // >>> build the chess border
@@ -40,6 +43,7 @@ for (let i = 0; i < 8; i++) {
 
 // >>>>>> order the pieces for the first time
 arrangingPieces();
+primaryLocation = location_arr;
 
 // >>>>>> controllers
 eleEvent(".control_button", (e) => {
@@ -48,6 +52,11 @@ eleEvent(".control_button", (e) => {
     if (e.getAttribute("value_name") == "testMode") {
       clearBoard();
       currentPiece = null;
+      if (!controls.testMode) {
+        primaryLocation = location_arr;
+        historyList = [];
+        index = 0;
+      }
     } else if (e.getAttribute("value_name") == "rotatingBoard") {
       if (controls.rotatingBoard)
         eleEvent(".chess_board", (ele) =>
@@ -62,28 +71,28 @@ eleEvent(".control_button", (e) => {
   func();
   e.addEventListener("change", func);
 });
+
 document.querySelector("button.reset").addEventListener("click", () => {
-  eleEvent(".chess_Piece", (e) =>
+  eleEvent(".container .chess_piece", (e) =>
     e.setAttribute("location", e.getAttribute("home"))
   );
   arrangingPieces();
 });
+
 document.querySelector("button.delete").addEventListener("click", () => {
-  eleEvent(".chess_Piece", (e) => {
-    // if (!e.getAttribute("alt")[1] == "k")
-    if (!(e.getAttribute("alt")[1] == "k")) e.setAttribute("location", "g");
-  });
-  arrangingPieces();
+  if (controls.testMode) {
+    eleEvent(".container .chess_piece", (e) => {
+      if (!(e.getAttribute("alt")[1] == "k")) e.setAttribute("location", "g");
+    });
+    arrangingPieces();
+  }
 });
 
 // >>>>>> move the pieces
-eleEvent(".chess_Piece", (e) => {
+eleEvent(".chess_piece", (e) => {
   e.addEventListener("click", () => {
     let array = [[], []];
     let { alt, location } = allAttributes(e);
-    let PieceType = alt[1];
-    let friend = alt[0];
-    let enemy = friend == "w" ? "b" : "w";
     if (e == currentPiece) currentPiece = null;
     // test mode
     else if (controls.testMode) {
@@ -98,53 +107,7 @@ eleEvent(".chess_Piece", (e) => {
     // normal mode
     else if (e.parentElement == document.querySelector(".chess_board")) {
       if ((round && alt[0] == "w") || (!round && alt[0] == "b")) {
-        switch (PieceType) {
-          // ------------- pawn
-          case "p":
-            array = pawn(location, enemy, friend);
-            break;
-          // ------------- rook
-          case "r":
-            array = rook(location, enemy, friend);
-            break;
-          // ------------- bishop
-          case "b":
-            array = bishop(location, enemy, friend);
-            break;
-          // ------------- queen
-          case "q":
-            let [r1, r2] = rook(location, enemy, friend);
-            let [b1, b2] = bishop(location, enemy, friend);
-            array = [
-              [...r1, ...b1],
-              [...r2, ...b2],
-            ];
-            break;
-          // ------------- knight
-          case "n":
-            array = knight(location, enemy);
-            break;
-          // ------------- king
-          case "k":
-            array = king(location, enemy);
-            break;
-        }
-        location_arr[location[0]][location[1]] = "-";
-        let kLocation = document
-          .querySelector(`[alt="${friend}k"]`)
-          .getAttribute("location");
-        for (let j = 0; j < 2; j++) {
-          for (let i = 0; i < array[j].length; i++) {
-            if (PieceType == "k") kLocation = array[j][i];
-            let x = array[j][i][0];
-            let y = array[j][i][1];
-            let old = location_arr[x][y];
-            location_arr[x][y] = alt;
-            if (checkKing(kLocation, enemy, friend)) array[j].splice(i--, 1);
-            location_arr[x][y] = old;
-          }
-        }
-        setLocationArray();
+        array = makingAvailableBoxesArray(e);
         currentPiece = e;
       }
     }
@@ -152,42 +115,76 @@ eleEvent(".chess_Piece", (e) => {
   });
 });
 
-// >>>>>> available click
+// >>>>>> change piece location
 addEventListener("click", (element) => {
   let classes = element.target.classList;
   let { location } = allAttributes(element.target);
   if (classes.contains("available") || classes.contains("danger")) {
+    let alt = currentPiece.getAttribute("alt");
     eleEvent(".ksh", (e) => e.classList.remove("ksh"));
-
     if (classes.contains("danger"))
-      eleEvent(`.chess_Piece[location="${location}"]`, (e) =>
+      eleEvent(`.chess_piece[location="${location}"]`, (e) =>
         e.setAttribute("location", "g")
       );
+    let oldLocation = currentPiece.getAttribute("location");
     currentPiece.setAttribute(
       "location",
       classes.contains("graveyard") ? "g" : location
     );
+    //** onMoving actions **\\
     arrangingPieces();
     if (!controls.testMode) {
-      round = !round;
-      rotateBoard();
-      let kLocation = document
-        .querySelector(`[alt="${round ? "w" : "b"}k"]`)
-        .getAttribute("location");
-      console.log(kLocation, round ? "w" : "b", !round ? "w" : "b");
-      console.log(checkKing(kLocation, round ? "w" : "b", !round ? "w" : "b"));
-      if (checkKing(kLocation, !round ? "w" : "b", round ? "w" : "b"))
+      //** *** Before ending the round *** **\\
+      //** History **\\
+      historyList[index++] = [oldLocation, location];
+
+      //** castling **\\
+      if (alt[1] == "k")
+        eleEvent(`[alt="${alt[0]}r"][castling]`, (e) =>
+          e.setAttribute("castling", "n")
+        );
+      if (alt[1] == "r")
+        eleEvent(`.chess_piece[location="${historyList[index - 1][1]}"]`, (e) =>
+          e.setAttribute("castling", "n")
+        );
+
+      //** pawn_promotion **\\
+      if (
+        (alt == "wp" && location[0] == "7") ||
+        (alt == "bp" && location[0] == "0")
+      )
         document
-          .querySelector(`.box[location="${kLocation}"]`)
-          .classList.add("ksh");
+          .querySelector(".pawn_promotion")
+          .classList.add("visible", alt[0]);
+      else StartNewRound();
     }
   }
 });
+
+// >>>>>> pawn_promotion
+
+document.querySelectorAll(".pawn_promotion .chess_piece").forEach((e) => {
+  e.addEventListener("click", () => {
+    eleEvent(
+      `.chess_piece[location="${historyList[index - 1][1]}"]`,
+      (piece) => {
+        piece.setAttribute("alt", e.getAttribute("alt"));
+        piece.setAttribute("src", e.getAttribute("src"));
+        location_arr[historyList[index - 1][1][0]][
+          historyList[index - 1][1][1]
+        ] = e.getAttribute("alt");
+      }
+    );
+    document.querySelector(".pawn_promotion").classList = "pawn_promotion";
+    StartNewRound();
+  });
+});
+
 // ********************* functions *********************
 function arrangingPieces() {
   clearBoard();
   let step = document.querySelector(".chess_board").offsetWidth / 8;
-  eleEvent(".chess_Piece", (ele) => {
+  eleEvent(".chess_piece", (ele) => {
     let { location, alt } = allAttributes(ele);
     if (location == "g") eleEvent(`.graveyard.${alt[0]}`, (e) => e.append(ele));
     else {
@@ -202,20 +199,21 @@ function arrangingPieces() {
   currentPiece = null;
   if (controls.movingSound) document.querySelector("audio").play();
 }
+
 function setLocationArray() {
   for (let i = 0; i < 8; i++) location_arr[i] = [..."-".repeat(8)];
-  eleEvent(".chess_board .chess_Piece", (ele) => {
+  eleEvent(".chess_board .chess_piece", (ele) => {
     let { location, alt } = allAttributes(ele);
     location_arr[location[0]][location[1]] = alt;
   });
 }
+
 function clearBoard() {
   eleEvent(".available,.danger", (e) =>
     e.classList.remove("available", "danger")
   );
 }
 
-//  show ability
 function showAbility(array) {
   clearBoard();
   array[0].forEach((e) => {
@@ -225,6 +223,7 @@ function showAbility(array) {
     document.querySelector(`.box[location="${e}"]`).classList.add("danger")
   );
 }
+
 function rotateBoard() {
   eleEvent(".chess_board", (e) => {
     e.classList.remove("roundW", "roundB");
@@ -235,7 +234,36 @@ function rotateBoard() {
     });
   });
 }
-// ********************* Shortcuts *********************
+
+// ** *** tools *** **\\
+function eleEvent(address, func) {
+  document.querySelectorAll(address).forEach((e) => func(e));
+}
+
+function allAttributes(e) {
+  let opp = {};
+  for (let i = 0; i < e.attributes.length; i++)
+    opp[e.attributes[i].name] = e.attributes[i].value;
+  return opp;
+}
+
+function check(loc, x = 0, y = 0) {
+  if (loc.length > 2) return "x";
+  else {
+    x += +loc[0];
+    y += +loc[1];
+    if (x > 7 || x < 0 || y > 7 || y < 0) return "x";
+    else return location_arr[x][y];
+  }
+}
+
+function newLoc(loc, x = 0, y = 0) {
+  x += +loc[0];
+  y += +loc[1];
+  return `${x}${y}`;
+}
+
+// ** *** Identify available locations *** **\\
 function pawn(location, enemy, friend) {
   let arr = [[], [], false];
   let D = friend == "w" ? 1 : -1;
@@ -253,6 +281,7 @@ function pawn(location, enemy, friend) {
   }
   return arr;
 }
+
 function rook(location, enemy, friend) {
   let arr = [[], [], false];
   for (let j = 0; j < 4; j++) {
@@ -273,6 +302,7 @@ function rook(location, enemy, friend) {
   }
   return arr;
 }
+
 function bishop(location, enemy, friend) {
   let arr = [[], [], false];
   for (let j = 0; j < 4; j++) {
@@ -293,6 +323,7 @@ function bishop(location, enemy, friend) {
   }
   return arr;
 }
+
 function knight(location, enemy) {
   let arr = [[], [], false];
   for (let i = 0; i < 8; i++) {
@@ -307,7 +338,7 @@ function knight(location, enemy) {
   return arr;
 }
 
-function king(location, enemy, friend) {
+function king(location, enemy) {
   let arr = [[], [], false];
   for (let i = 0; i < 9; i++) {
     let x = Math.trunc(i / 3) - 1;
@@ -320,41 +351,101 @@ function king(location, enemy, friend) {
   }
   return arr;
 }
+
 function checkKing(location, enemy, friend) {
   return (
     pawn(location, enemy, friend)[2] ||
     rook(location, enemy, friend)[2] ||
     bishop(location, enemy, friend)[2] ||
-    knight(location, enemy, friend)[2] ||
-    king(location, enemy, friend)[2]
+    knight(location, enemy)[2] ||
+    king(location, enemy)[2]
   );
 }
-// ********************* tools *********************
-function eleEvent(address, func) {
-  document.querySelectorAll(address).forEach((e) => func(e));
-}
 
-function allAttributes(e) {
-  let opp = {};
-  for (let i = 0; i < e.attributes.length; i++)
-    opp[e.attributes[i].name] = e.attributes[i].value;
-  return opp;
-}
-
-function check(loc, x = 0, y = 0) {
-  if (loc.length > 2) return "x";
-  else {
-    x += +loc[0];
-    y += +loc[1];
-    if (x > 7 || x < 0 || y > 7 || y < 0) return "x";
-    else {
-      return location_arr[x][y];
+function makingAvailableBoxesArray(e) {
+  let array = [[], []];
+  let { alt, location } = allAttributes(e);
+  let PieceType = alt[1];
+  let friend = alt[0];
+  let enemy = friend == "w" ? "b" : "w";
+  switch (PieceType) {
+    // ------------- pawn
+    case "p":
+      array = pawn(location, enemy, friend);
+      break;
+    // ------------- rook
+    case "r":
+      array = rook(location, enemy, friend);
+      break;
+    // ------------- bishop
+    case "b":
+      array = bishop(location, enemy, friend);
+      break;
+    // ------------- queen
+    case "q":
+      let [r1, r2] = rook(location, enemy, friend);
+      let [b1, b2] = bishop(location, enemy, friend);
+      array = [
+        [...r1, ...b1],
+        [...r2, ...b2],
+      ];
+      break;
+    // ------------- knight
+    case "n":
+      array = knight(location, enemy);
+      break;
+    // ------------- king
+    case "k":
+      array = king(location, enemy);
+      break;
+  }
+  location_arr[location[0]][location[1]] = "-";
+  let kLocation = document
+    .querySelector(`[alt="${friend}k"]`)
+    .getAttribute("location");
+  for (let j = 0; j < 2; j++) {
+    for (let i = 0; i < array[j].length; i++) {
+      if (PieceType == "k") kLocation = array[j][i];
+      let x = array[j][i][0];
+      let y = array[j][i][1];
+      let old = location_arr[x][y];
+      location_arr[x][y] = alt;
+      if (checkKing(kLocation, enemy, friend)) array[j].splice(i--, 1);
+      location_arr[x][y] = old;
     }
   }
+  setLocationArray();
+  return array;
 }
 
-function newLoc(loc, x = 0, y = 0) {
-  x += +loc[0];
-  y += +loc[1];
-  return `${x}${y}`;
+// ** *** Start new round *** **\\
+function StartNewRound() {
+  // Exchanging roles
+  round = !round;
+  rotateBoard();
+  // Checkmate
+  let kLocation = document
+    .querySelector(`[alt="${round ? "w" : "b"}k"]`)
+    .getAttribute("location");
+  let ksh = checkKing(kLocation, !round ? "w" : "b", round ? "w" : "b");
+  if (ksh)
+    document
+      .querySelector(`.box[location="${kLocation}"]`)
+      .classList.add("ksh");
+  // check if game end
+  let end = true;
+  let pieceCount = 0;
+  eleEvent(".chess_board .chess_piece", (e) => {
+    if (e.getAttribute("alt")[0] == (!round ? "b" : "w")) {
+      let testArr = makingAvailableBoxesArray(e);
+      end &&= testArr[0].length == 0 && testArr[1].length == 0;
+    }
+    pieceCount++;
+  });
+  end ||= pieceCount == 2;
+  if (end && ksh) {
+    console.log((!round ? "white" : "black") + " wine");
+  } else if (end && !ksh) {
+    console.log("draw");
+  }
 }
