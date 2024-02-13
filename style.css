@@ -186,7 +186,8 @@ button {
 }
 /* ******* ----------- ******* */
 /* ******* pawn_promotion ******* */
-.pawn_promotion {
+.pawn_promotion ,
+.winner {
   position: fixed;
   height: 100vh;
   width: 100vw;
@@ -200,21 +201,24 @@ button {
   opacity: 0;
   transition-duration: 0.3s;
 }
-.pawn_promotion.visible {
+.pawn_promotion.visible ,
+.winner.visible {
   visibility: visible;
   opacity: 1;
 }
-.pawn_promotion .counter {
+.pawn_promotion .counter ,
+.winner p {
   padding: 50px 100px;
   background-color: white;
+  font-size: 50px;
 }
 .pawn_promotion {
   padding: 10px;
 }
-.pawn_promotion.b .chess_piece[alt^="w"] {
+.pawn_promotion.b .w {
   display: none;
 }
-.pawn_promotion.w .chess_piece[alt^="b"] {
+.pawn_promotion.w .b {
   display: none;
 }
 /* ******* -------------- ******* */
@@ -229,10 +233,10 @@ button {
   width: calc(var(--boardWidth) / 16);
   position: relative;
 }
-.graveyard.b {
+[location="gb"] {
   background-color: var(--black_color);
 }
-.graveyard.w {
+[location="gw"] {
   background-color: var(--white_color);
 }
 .graveyard.available {
@@ -247,9 +251,14 @@ button {
   gap: 5px;
   max-width: 100%;
 }
+.history button{
+  font-size: 18px;
+}
 .history div {
   flex-grow: 1;
   width: 0;
+  display: flex;
+  align-items: center;
 }
 .history p {
   margin: 0;
@@ -257,13 +266,21 @@ button {
   overflow: hidden;
   display: flex;
   justify-content: end;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.history p span{
+  padding: 1px 5px;
+}
+.history p span.here{
+  background-color: #fff9;
 }
 .history > * {
   height: 100%;
   padding: 6px;
   box-sizing: border-box;
   background-color: #d88d0eaa;
-  color: white;
+  color: #121;
   margin: 0;
   border: none;
 }
