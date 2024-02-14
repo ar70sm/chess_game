@@ -23,7 +23,7 @@ export function setLocation(variable, newX = true, newY = true) {
     piecesList[i].state = true;
   }
   // update the location on the page
-  let step = chess_board.offsetWidth / 8;
+  let step = chess_board.offsetHeight / 8;
   let { x, y, state, team } = piecesList[i];
   if (state) {
     if (!(e.parentElement == chess_board)) chess_board.append(e);
@@ -248,4 +248,9 @@ export function arrEquals(a, b) {
     if (a[i] != b[i]) return false;
   }
   return true;
+}
+export function multiEvents(events, element, fun) {
+  for (let i=0;i<events.length;i++) {
+    element.addEventListener(events[i],fun(element))
+  }
 }

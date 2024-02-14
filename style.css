@@ -17,6 +17,11 @@ body {
   display: grid;
   gap: 10px;
   grid-template-columns: auto auto auto;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 /* ******* ------- ******* */
 /* ******* control board ******* */
@@ -28,12 +33,16 @@ body {
   color: white;
   display: flex;
   gap: 20px;
+  font-size: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 /* test mode */
 .control_board label {
   display: inline-flex;
   justify-content: space-around;
   align-items: center;
+  cursor: pointer;
 }
 .control_board label input {
   display: none;
@@ -51,17 +60,20 @@ body {
 .control_board label span::after {
   content: "";
   height: 15px;
-  width: 15px;
+  width: 18px;
   border-radius: 15px;
   position: absolute;
   top: 1px;
   transform: translateX(0);
   left: 1px;
+  transform: translateX(0);
+
   background-color: #aaa;
   transition-duration: 0.15s;
 }
 .control_board label input:checked + span::after {
-  transform: translateX(10px);
+  left: calc(100% - 1px);
+  transform: translateX(-100%);
   background-color: #d88d0e;
 }
 button {
@@ -70,15 +82,17 @@ button {
   background-color: #d88d0e;
   color: white;
   padding: 2px 10px;
+  cursor: pointer;
+  font-size: 10px;
 }
 /* ******* ------------- ******* */
 
 /* ******* chess board ******* */
 .chess_board {
   display: grid;
-  height: var(--boardWidth);
+  /* height: var(--boardWidth); */
   width: var(--boardWidth);
-  grid-template: repeat(8, auto) / repeat(8, auto);
+  grid-template: repeat(8, 1fr) / repeat(8, 1fr);
   position: relative;
   transform: rotate(0deg) scale(1);
 }
@@ -128,6 +142,10 @@ button {
   height: calc(100% - 2px);
   width: calc(100% - 2px);
 }
+.chess_board .box.danger::before,
+.chess_board .box.available::after {
+  cursor: pointer;
+}
 .chess_board .box.available::after {
   background-color: #0030ef77;
 }
@@ -157,6 +175,12 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
+  transition-duration: 1s;
+  transition-delay: 0.5s;
+}
+.rotatingBoard.roundB .box .hSeq,
+.rotatingBoard.roundB .box .vSeq {
+  transform: rotate(180deg);
 }
 .chess_board .box .hSeq {
   bottom: 2px;
@@ -172,9 +196,11 @@ button {
   height: calc(var(--boardWidth) / 8 - 8px);
   padding: 4px;
   position: absolute;
+  transition-property: left, bottom;
   transition-duration: 0.3s;
   z-index: 5;
   transform: rotate(0);
+  cursor: pointer;
 }
 .rotatingBoard .chess_piece[alt^="b"] {
   transform: rotate(180deg);
@@ -186,7 +212,7 @@ button {
 }
 /* ******* ----------- ******* */
 /* ******* pawn_promotion ******* */
-.pawn_promotion ,
+.pawn_promotion,
 .winner {
   position: fixed;
   height: 100vh;
@@ -201,19 +227,16 @@ button {
   opacity: 0;
   transition-duration: 0.3s;
 }
-.pawn_promotion.visible ,
+.pawn_promotion.visible,
 .winner.visible {
   visibility: visible;
   opacity: 1;
 }
-.pawn_promotion .counter ,
+.pawn_promotion .counter,
 .winner p {
   padding: 50px 100px;
   background-color: white;
   font-size: 50px;
-}
-.pawn_promotion {
-  padding: 10px;
 }
 .pawn_promotion.b .w {
   display: none;
@@ -225,7 +248,7 @@ button {
 
 /* ******* graveyard ******* */
 .graveyard {
-  height: var(--boardWidth);
+  /* height: var(--boardWidth); */
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -250,15 +273,14 @@ button {
   display: flex;
   gap: 5px;
   max-width: 100%;
+  height: calc(var(--boardWidth) / 16);
 }
-.history button{
+.history button {
   font-size: 18px;
 }
 .history div {
   flex-grow: 1;
   width: 0;
-  display: flex;
-  align-items: center;
 }
 .history p {
   margin: 0;
@@ -269,10 +291,10 @@ button {
   white-space: nowrap;
   font-size: 12px;
 }
-.history p span{
+.history p span {
   padding: 1px 5px;
 }
-.history p span.here{
+.history p span.here {
   background-color: #fff9;
 }
 .history > * {
@@ -283,5 +305,53 @@ button {
   color: #121;
   margin: 0;
   border: none;
+  display: flex;
+  align-items: center;
 }
 /* ******* ------- ******* */
+
+/* ******* phone settings ******* */
+@media (max-width:767px){
+  .container{
+    height: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .chess_board {
+    width: 100%;
+    height: var(--boardWidth);
+  }
+  .graveyard{
+    order: 2;
+    height:  calc(var(--boardWidth) / 16);
+    width: 100%;
+    flex-direction: row;
+  }
+  .history{
+    order: 2;
+  }
+  .control_board label{
+    font-size: 9px;
+  }
+  button{
+    font-size: 8px ;
+  }
+  .history button{
+    font-size: 11px;
+  }
+  .control_board label span{
+    height: 10px;
+    width: 15px;
+  }
+  .control_board label span::after{
+    height: 10px;
+    width: 10px;
+  }
+  .chess_board .box .hSeq, .chess_board .box .vSeq{
+    font-size: 6px;
+    height: 7px;
+  width: 7px;
+  }
+}
+/* ******* -------------- ******* */

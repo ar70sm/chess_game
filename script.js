@@ -8,6 +8,7 @@ import {
   availableArray,
   checkKing,
   arrEquals,
+  multiEvents,
 } from "./functions.js";
 
 // ### ##### importing pieces list ##### ### \\
@@ -48,6 +49,12 @@ for (let i = 0; i < 8; i++) {
     chess_board.append(div);
   }
 }
+// multiEvents(["load","resize"],document.querySelector(":root"),(ele)=>{
+//     ele.style.setProperty("--boardWidth", chess_board.offsetHeight + "px");
+// })
+// addEventListener("resize",()=>{
+//   console.log(chess_board.offsetHeight)
+// })
 // -- upload the chess peaces
 piecesList.forEach((ele, i) => {
   let img = document.createElement("img");
@@ -58,7 +65,33 @@ piecesList.forEach((ele, i) => {
   chess_board.append(img);
 });
 // -- arranging the pieces
-for (let i = 0; i < 32; i++) setLocation(i);
+if (window.matchMedia("(max-width: 767px)")){
+  addEventListener("load", () => {
+    document
+      .querySelector(":root")
+      .style.setProperty("--boardWidth", chess_board.offsetWidth + "px");
+    for (let i = 0; i < 32; i++) setLocation(i);
+  });
+  addEventListener("resize", () => {
+    document
+      .querySelector(":root")
+      .style.setProperty("--boardWidth", chess_board.offsetWidth + "px");
+    for (let i = 0; i < 32; i++) setLocation(i);
+  });
+}else{
+  addEventListener("load", () => {
+    document
+      .querySelector(":root")
+      .style.setProperty("--boardWidth", chess_board.offsetHeight + "px");
+    for (let i = 0; i < 32; i++) setLocation(i);
+  });
+  addEventListener("resize", () => {
+    document
+      .querySelector(":root")
+      .style.setProperty("--boardWidth", chess_board.offsetHeight + "px");
+    for (let i = 0; i < 32; i++) setLocation(i);
+  });
+}
 
 // ### ##### control board ##### ### \\
 // -- test mode
@@ -68,7 +101,12 @@ testModeButton.addEventListener("change", () => {
   testMode = testModeButton.checked;
   clearBoard();
   document.querySelectorAll(".ksh").forEach((e) => e.classList.remove("ksh"));
-  if (!testMode) round = true;
+  if (!testMode) {
+    round = true;
+    rotateBoard();
+    hI = 0;
+    document.querySelector(".history p").innerHTML = "";
+  }
 });
 // -- moving sound
 let soundsButton = document.querySelector(".control_board .sounds input");
@@ -78,13 +116,15 @@ soundsButton.addEventListener("change", () => {
 });
 // -- rotating board
 let rotatingButton = document.querySelector(".control_board .rotating input");
-if (rotatingButton.checked)
-  chess_board.classList.add("rotatingBoard", round ? "roundW" : "roundB");
-else chess_board.classList.remove("rotatingBoard");
+if (rotatingButton.checked) {
+  chess_board.classList.add("rotatingBoard");
+  if (!round) chess_board.classList.add("roundB");
+} else chess_board.classList.remove("rotatingBoard", "roundW", "roundB");
 rotatingButton.addEventListener("change", () => {
-  if (rotatingButton.checked)
-    chess_board.classList.add("rotatingBoard", round ? "roundW" : "roundB");
-  else chess_board.classList.remove("rotatingBoard");
+  if (rotatingButton.checked) {
+    chess_board.classList.add("rotatingBoard");
+    if (!round) chess_board.classList.add("roundB");
+  } else chess_board.classList.remove("rotatingBoard", "roundW", "roundB");
 });
 // -- reset
 document
@@ -96,6 +136,10 @@ document
     });
     CastlingList = { wr: true, wl: true, br: true, bl: true };
     clearBoard();
+    round = true;
+    rotateBoard();
+    hI = 0;
+    document.querySelector(".history p").innerHTML = "";
   });
 // -- all out button
 document.querySelector("button.delete").addEventListener("click", () => {
@@ -187,24 +231,24 @@ document.querySelectorAll(".chess_piece").forEach((ele) => {
               (oldY == y + 1 || oldY == y - 1) &&
               piecesList[p].type == "p"
             ) {
-              piecesList[index].x= x + D;
-              piecesList[index].y= oldY;
-              piecesList[p].state= false;
+              piecesList[index].x = x + D;
+              piecesList[index].y = oldY;
+              piecesList[p].state = false;
               if (!checkKing(team)) {
                 array[0].push([x + D, oldY]);
                 array[1].push([x, oldY]);
                 let blue = document.querySelector(
                   `[location="${x + D}${oldY}"]`
-                  );
-                  let red = document.querySelector(`[location="${x}${oldY}"]`);
-                  blue.classList.add("throwingB");
-                  red.classList.add("throwingR");
-                  blue.setAttribute("remove", p);
-                  red.setAttribute("dir", D);
-                }
-                piecesList[index].x= x;
-                piecesList[index].y= y;
-                piecesList[p].state= true;
+                );
+                let red = document.querySelector(`[location="${x}${oldY}"]`);
+                blue.classList.add("throwingB");
+                red.classList.add("throwingR");
+                blue.setAttribute("remove", p);
+                red.setAttribute("dir", D);
+              }
+              piecesList[index].x = x;
+              piecesList[index].y = y;
+              piecesList[p].state = true;
             }
           }
         }
@@ -298,12 +342,23 @@ document
 // ### ##### direct functions ##### ### \\
 // -- rotate the board
 function rotateBoard() {
-  chess_board.classList.remove("roundW", "roundB");
-  requestAnimationFrame((time) => {
+  let w = chess_board.classList.contains("roundW");
+  let b = chess_board.classList.contains("roundB");
+  if (b) {
+    chess_board.classList.remove("roundB");
     requestAnimationFrame((time) => {
-      chess_board.classList.add(round ? "roundW" : "roundB");
+      requestAnimationFrame((time) => {
+        if (round) chess_board.classList.add("roundW");
+      });
     });
-  });
+  } else {
+    chess_board.classList.remove("roundW");
+    requestAnimationFrame((time) => {
+      requestAnimationFrame((time) => {
+        if (!round) chess_board.classList.add("roundB");
+      });
+    });
+  }
 }
 // -- Start new round
 function StartNewRound() {
@@ -382,6 +437,7 @@ function historyBack() {
     }
     round = !round;
     HistoryEle();
+    rotateBoard();
   }
 }
 function historyFront() {
@@ -396,5 +452,6 @@ function historyFront() {
     round = !round;
     hI++;
     HistoryEle();
+    rotateBoard();
   }
 }
